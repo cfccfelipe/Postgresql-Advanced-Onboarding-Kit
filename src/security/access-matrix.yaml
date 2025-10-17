@@ -1,0 +1,27 @@
+roles:
+  analyst_role:
+    schemas: [recipes]
+    privileges: [USAGE, SELECT]
+
+  developer_role:
+    schemas: [recipes, ingredients, cooking_session]
+    privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
+
+  auditor_role:
+    schemas: [audit]
+    privileges: [USAGE, SELECT]
+
+  admin_role:
+    schemas: [recipes, ingredients, cooking_session, users, audit, staging]
+    privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
+
+users:
+  donald:
+    inherits: analyst_role
+
+  elon:
+    inherits: analyst_role
+
+  felipe:
+    inherits: developer_role
+

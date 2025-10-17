@@ -1,0 +1,39 @@
+# PostgreSQL artifacts
+*.sql~
+*.dump
+*.log
+*.backup
+
+# Local environment and credentials
+.env
+.env.*
+*.pgpass
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# YAMLs tracked explicitly
+!access-matrix.yaml
+*.yaml~
+
+# Obsidian vault artifacts (if used)
+.obsidian/
+.cache/
+workspace.json
+
+# Markdown build artifacts
+_site/
+*.md~
+
+# Temporary or test files
+tmp/
+*.tmp
+*.bak
+*.old
