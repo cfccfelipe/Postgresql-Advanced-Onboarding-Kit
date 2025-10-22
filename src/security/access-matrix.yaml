@@ -1,10 +1,10 @@
 roles:
   analyst_role:
-    schemas: [recipes]
+    schemas: [projects]
     privileges: [USAGE, SELECT]
 
   developer_role:
-    schemas: [recipes, ingredients, cooking_session]
+    schemas: [projects, documents, sessions]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
   auditor_role:
@@ -12,7 +12,7 @@ roles:
     privileges: [USAGE, SELECT]
 
   admin_role:
-    schemas: [recipes, ingredients, cooking_session, users, audit, staging]
+    schemas: [projects, documents, sessions, users, audit, staging]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
 users:
@@ -24,4 +24,3 @@ users:
 
   felipe:
     inherits: developer_role
-

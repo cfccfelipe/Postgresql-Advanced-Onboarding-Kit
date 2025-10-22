@@ -1,165 +1,122 @@
-# 🔐 Role-Based Access Control (RBAC) – CookSync
+# 🔐 Role-Based Access Control (RBAC) – ProSync
 
-## 🧠 Mission
-Design a secure, auditable, and scalable PostgreSQL access model using functional roles, user inheritance, and schema-level permissions.
+Design a secure, auditable, and scalable PostgreSQL access model for project collaboration using functional roles, user inheritance, and schema-level permissions.
 
 ---
 
-## 🛠️ Workflow Steps
+## 🟢 Step 0: Create the ProSync Database
 
-### 🟢 Step 0: Create the CookSync Database
+**Purpose**: Establish a clean, UTF-8 encoded database with ICU locale support for multilingual compatibility and audit-readiness.
 
-```sql
--- Run this from a superuser or admin context
-CREATE DATABASE cooksynth_db
-  WITH
-    OWNER = postgres
-    ENCODING = 'UTF8'
-    LOCALE_PROVIDER = icu
-    ICU_LOCALE = 'en-US'
-    TEMPLATE = template0;
+**Traceability**:
+- Use `\l` to confirm creation and encoding
+- Ensure `postgres` is the owner for initial bootstrap
+- Access via `psql -d prosync_db` or equivalent tooling
 
-```
-Traceability:
+---
 
-- Use \l to confirm creation
-- Ensure correct owner and encoding for compatibility
-- Access the new DB: sudo -u postgres psql -d cooksynth_db
+## ✅ Step 1: Create Functional Roles
 
-### ✅ Step 1: Create Functional Roles
+**Purpose**: Define domain-specific access roles to separate responsibilities and enforce least privilege.
 
-```sql
--- Create functional roles
-CREATE ROLE analyst_role;
-CREATE ROLE developer_role;
-CREATE ROLE auditor_role;
-CREATE ROLE admin_role;
-```
-Traceability:
+**Roles**:
+- `analyst_role`: read-only access to project data
+- `developer_role`: full access to operational schemas
+- `auditor_role`: read-only access to audit logs
+- `admin_role`: full access to all schemas
 
-- Use \du to confirm scope.
-- Schema-level grants avoid table-by-table errors.
+**Traceability**:
+- Use `\du` to confirm role creation
+- Avoid table-level grants; rely on schema-level privileges
 
+---
 
-### ✅ Step 2: Create User-Specific Roles
+## ✅ Step 2: Create User-Specific Roles
 
-```sql
--- Create individual users
-CREATE ROLE elon LOGIN PASSWORD 'secure123';
-CREATE ROLE donald LOGIN PASSWORD 'secure456';
-CREATE ROLE felipe LOGIN PASSWORD 'root';
+**Purpose**: Create login-enabled roles for individual users and assign them to functional roles.
 
--- Assign only one functional role per user
-GRANT analyst_role TO elon;
-GRANT auditor_role TO donald;
-GRANT developer_role TO felipe;
+**Users**:
+- `elon`: inherits `analyst_role`
+- `donald`: inherits `auditor_role`
+- `felipe`: inherits `developer_role`
 
--- Audit assigment
-SELECT
-  r1.rolname AS inherited_role,
-  r2.rolname AS user,
-  m.admin_option
-FROM pg_auth_members m
-JOIN pg_roles r1 ON m.roleid = r1.oid
-JOIN pg_roles r2 ON m.member = r2.oid
-WHERE r2.rolname IN ('felipe');
+**Traceability**:
+- Use `\dg` to confirm login roles
+- Use `pg_auth_members` to audit inheritance
+- Avoid direct grants to users; use role chaining
 
-```
-Traceability:
+---
 
-- Use \dg to confirm creation.
-- Avoid direct grants to users.
+## ✅ Step 3: Revoke Implicit Access from PUBLIC
 
-### ✅ Step 3: Revoke Implicit Access from PUBLIC
+**Purpose**: Remove default access to the `public` schema to enforce explicit permissioning.
 
-```sql
--- Revoke default access
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-```
-Traceability:
-- Use pg_default_acl to confirm 0 rules.
-- Enforce explicit permissioning to any schema. Avoid granting privileges on public;
+**Traceability**:
+- Use `pg_default_acl` to confirm no residual access
+- Prevent accidental exposure of internal objects
 
-### ✅ Step 4: Create foundational schemas for privilege segmentation
+---
 
-```sql
--- Create base schemas
-CREATE SCHEMA IF NOT EXISTS recipes;
-CREATE SCHEMA IF NOT EXISTS ingredients;
-CREATE SCHEMA IF NOT EXISTS cooking_session;
-CREATE SCHEMA IF NOT EXISTS users;
-CREATE SCHEMA IF NOT EXISTS audit;
-CREATE SCHEMA IF NOT EXISTS staging;
-```
-Traceability: Use pg_namespace to verify schema existence and ownership. Explicit schemas improve traceability.
+## ✅ Step 4: Create Foundational Schemas for Privilege Segmentation
 
-### ✅ Step 5 Assign privileges by schema
-```sql
--- DEVELOPER: acceso completo a ingredientes y sesiones
--- INGREDIENTS
-GRANT USAGE, CREATE ON SCHEMA ingredients TO developer_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ingredients TO developer_role;
+**Purpose**: Segment the database into logical domains for modular access control and auditability.
 
--- COOKING_SESSION
-GRANT USAGE, CREATE ON SCHEMA cooking_session TO developer_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA cooking_session TO developer_role;
+**Schemas**:
+- `projects`: project metadata and ownership
+- `documents`: uploaded files and metadata
+- `sessions`: authentication and session tracking
+- `users`: user profiles and identity
+- `audit`: system actions and trace logs
+- `staging`: temporary ingest and validation zone
+- `system`: schema versioning and migration tracking
 
--- RECIPES
-GRANT USAGE, CREATE ON SCHEMA recipes TO developer_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA recipes TO developer_role;
+**Traceability**:
+- Use `pg_namespace` to confirm schema existence
+- Assign ownership to `admin_role` for governance
 
+---
 
--- AUDITOR: acceso de solo lectura a tablas auditadas
-GRANT USAGE ON SCHEMA audit TO auditor_role;
-GRANT SELECT ON ALL TABLES IN SCHEMA audit TO auditor_role;
+## ✅ Step 5: Assign Privileges by Schema
 
--- ADMIN: acceso total a todos los esquemas
-GRANT ALL PRIVILEGES ON SCHEMA recipes, ingredients, cooking_session, users, audit, staging TO admin_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA recipes TO admin_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA users TO admin_role;
-```
-Traceability:
+**Purpose**: Grant schema-level access to functional roles based on their responsibilities.
 
-- Use pg_namespace to confirm schema-level privileges by role
+**Access Matrix**:
+- `developer_role`: full access to `projects`, `documents`, `sessions`
+- `auditor_role`: read-only access to `audit`
+- `admin_role`: full access to all schemas
+- `analyst_role`: read-only access to `projects`
 
+**Traceability**:
+- Use `has_schema_privilege()` to validate grants
+- Ensure `USAGE` and `CREATE` are explicitly assigned
 
-### ✅ Step 8: Audit and validate privileges
+---
 
-```sql
-SELECT
-  r.rolname AS role,
-  n.nspname AS schema,
-  CASE
-    WHEN has_schema_privilege(r.rolname, n.nspname, 'USAGE') THEN 'USAGE '
-    ELSE ''
-  END ||
-  CASE
-    WHEN has_schema_privilege(r.rolname, n.nspname, 'CREATE') THEN 'CREATE '
-    ELSE ''
-  END AS privileges
-FROM pg_roles r
-JOIN pg_namespace n ON has_schema_privilege(r.rolname, n.nspname, 'USAGE')
-   OR has_schema_privilege(r.rolname, n.nspname, 'CREATE')
-WHERE r.rolname IN ('analyst_role', 'developer_role', 'auditor_role', 'admin_role')
-ORDER BY r.rolname, n.nspname;
-```
+## ✅ Step 6: Audit and Validate Privileges
 
-Traceability:
+**Purpose**: Confirm that each role has the correct access to each schema.
 
-- Confirms schema-level access per role
-- Use has_schema_privilege() for granular validation
+**Traceability**:
+- Use `pg_roles` + `pg_namespace` joins to inspect privileges
+- Validate `USAGE`, `CREATE`, and table-level access
+- Automate checks in CI/CD pipelines if needed
 
-### ✅ Step 8: Document with Role Hierachy and Acess Matrix
-# access-matrix.yaml (version-controlled)
+---
+
+## ✅ Step 7: Document Role Hierarchy and Access Matrix
+
+**Purpose**: Maintain a version-controlled YAML file that defines role inheritance and schema access.
 
 ```yaml
+# security/access-matrix.yaml
+
 roles:
   analyst_role:
-    schemas: [recipes]
+    schemas: [projects]
     privileges: [USAGE, SELECT]
 
   developer_role:
-    schemas: [recipes, ingredients, cooking_session]
+    schemas: [projects, documents, sessions]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
   auditor_role:
@@ -167,7 +124,7 @@ roles:
     privileges: [USAGE, SELECT]
 
   admin_role:
-    schemas: [recipes, ingredients, cooking_session, users, audit, staging]
+    schemas: [projects, documents, sessions, users, audit, staging, system]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
 users:
@@ -181,5 +138,11 @@ users:
     inherits: developer_role
 ```
 
+Traceability:
+
+Store in Git for auditability
+
+Use as source of truth for onboarding and privilege reviews
+
 ✅ Quest Complete
-This RBAC foundation enables scalable onboarding, privilege auditing, and domain-based access control.
+This RBAC foundation enables scalable onboarding, privilege auditing, and domain-based access control for project collaboration in ProSync. It supports CI/CD, session tracking, document staging, and secure multi-user workflows.

@@ -1,20 +1,25 @@
-# 🧠 Practice Scenario: CookSync – A Scalable Recipe Collaboration Platform
+# 🧠 Practice Scenario: ProSync – Scalable Project Collaboration Platform
 
+## 🧭 Purpose
 In this lab, you'll put PostgreSQL best practices into action to build high-quality, maintainable databases step-by-step.
 
-## 🎯 Objective
-Design, implement, and optimize a PostgreSQL database for **CookSync**, a collaborative cooking platform where users can:
+## 🎯 Learning Objectives
+Build and optimize a PostgreSQL schema that supports:
 
-- Create, edit, and share recipes
-- Track cooking sessions
+- 👥 Multi-user collaboration on projects
+- 📝 Version history and audit trails
+- 🔐 Role-based access control (RBAC)
+- 🧩 Structured and semi-structured data (JSON)
+- 🚀 Performance at scale (partitioning, indexing, materialized views)
+
+## 🧱 System Overview
+**ProSync** enables users to:
+
+- Create, edit, and share project profiles
+- Attach and manage project documents
+- Track work sessions and outcomes
 - Audit changes and version history
-
-The system must support:
-
-- ✅ Concurrent edits
-- ✅ Secure, role-based access
-- ✅ Structured and semi-structured data (JSON)
-- ✅ Performance at scale (partitioning, indexing, materialized views)
+- Collaborate securely with differentiated permissions (owner vs participant)
 
 ## 📁 Folde Structure
 
@@ -29,11 +34,13 @@ potgresql-advanced-onboarding-kit/
 │   ├── sql # Scripts extractiong from de docs/quests.
 ```
 
-## 🧪 Quests Summary
+## 🧩 Quest Log – ProSync
 
-| Quest                                                                | Skill Domain              |
-|----------------------------------------------------------------------|---------------------------|
-| Create a Role Based Access Control                                   | SQL Privileges and Roles  |
+## 🧩 Quest Log – ProSync
 
----
+| Quest                                                       | Skill Domain                    |
+|-------------------------------------------------------------|----------------------------------|
+| Create a Role-Based Access Control (RBAC)                   | SQL Privileges and Roles         |
+| Design a Normalized Data Model                              | SQL Schema Design                |
+
 

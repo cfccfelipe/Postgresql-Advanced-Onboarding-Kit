@@ -1,5 +1,6 @@
--- Step 0: Create the CookSync Database
-CREATE DATABASE cooksynth_db
+-- STEP 0: CREATE DATABASE
+
+CREATE DATABASE prosync_db
   WITH
     OWNER = postgres
     ENCODING = 'UTF8'
@@ -7,13 +8,15 @@ CREATE DATABASE cooksynth_db
     ICU_LOCALE = 'en-US'
     TEMPLATE = template0;
 
--- Step 1: Create Functional Roles
+-- STEP 1: CREATE FUNCTIONAL ROLES
+
 CREATE ROLE analyst_role;
 CREATE ROLE developer_role;
 CREATE ROLE auditor_role;
 CREATE ROLE admin_role;
 
--- Step 2: Create User-Specific Roles
+-- STEP 2: CREATE USER-SPECIFIC ROLES
+
 CREATE ROLE elon LOGIN PASSWORD 'secure123';
 CREATE ROLE donald LOGIN PASSWORD 'secure456';
 CREATE ROLE felipe LOGIN PASSWORD 'root';
@@ -22,49 +25,47 @@ GRANT analyst_role TO elon;
 GRANT auditor_role TO donald;
 GRANT developer_role TO felipe;
 
--- Audit assignment
-SELECT
-  r1.rolname AS inherited_role,
-  r2.rolname AS user,
-  m.admin_option
-FROM pg_auth_members m
-JOIN pg_roles r1 ON m.roleid = r1.oid
-JOIN pg_roles r2 ON m.member = r2.oid
-WHERE r2.rolname IN ('felipe');
+-- STEP 3: REVOKE PUBLIC ACCESS
 
--- Step 3: Revoke Implicit Access from PUBLIC
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 
--- Step 4: Create Foundational Schemas
-CREATE SCHEMA IF NOT EXISTS recipes;
-CREATE SCHEMA IF NOT EXISTS ingredients;
-CREATE SCHEMA IF NOT EXISTS cooking_session;
+-- STEP 4: CREATE FOUNDATIONAL SCHEMAS
+
+CREATE SCHEMA IF NOT EXISTS projects;
+CREATE SCHEMA IF NOT EXISTS documents;
+CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS users;
 CREATE SCHEMA IF NOT EXISTS audit;
 CREATE SCHEMA IF NOT EXISTS staging;
+CREATE SCHEMA IF NOT EXISTS system;
 
--- Step 5: Assign Privileges by Schema
+-- STEP 5: ASSIGN PRIVILEGES BY SCHEMA
 
--- DEVELOPER
-GRANT USAGE, CREATE ON SCHEMA ingredients TO developer_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ingredients TO developer_role;
+-- DEVELOPER ROLE
+GRANT USAGE, CREATE ON SCHEMA projects TO developer_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA projects TO developer_role;
 
-GRANT USAGE, CREATE ON SCHEMA cooking_session TO developer_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA cooking_session TO developer_role;
+GRANT USAGE, CREATE ON SCHEMA documents TO developer_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA documents TO developer_role;
 
-GRANT USAGE, CREATE ON SCHEMA recipes TO developer_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA recipes TO developer_role;
+GRANT USAGE, CREATE ON SCHEMA auth TO developer_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA auth TO developer_role;
 
--- AUDITOR
+-- AUDITOR ROLE
 GRANT USAGE ON SCHEMA audit TO auditor_role;
 GRANT SELECT ON ALL TABLES IN SCHEMA audit TO auditor_role;
 
--- ADMIN
-GRANT ALL PRIVILEGES ON SCHEMA recipes, ingredients, cooking_session, users, audit, staging TO admin_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA recipes TO admin_role;
+-- ADMIN ROLE
+GRANT ALL PRIVILEGES ON SCHEMA projects, documents, auth, users, audit, staging, system TO admin_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA users TO admin_role;
 
--- Step 8: Audit and Validate Privileges
+-- STEP 6: DBMS CONFIGURATION
+
+ALTER SCHEMA documents SET SCHEMA OWNER TO admin_role;
+ALTER SCHEMA audit SET SCHEMA OWNER TO admin_role;
+
+-- STEP 7: AUDIT AND VALIDATE PRIVILEGES
+
 SELECT
   r.rolname AS role,
   n.nspname AS schema,
