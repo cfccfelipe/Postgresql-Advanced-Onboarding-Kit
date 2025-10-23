@@ -13,7 +13,7 @@ Build and optimize a PostgreSQL schema that supports:
 - 🚀 Performance at scale (partitioning, indexing, materialized views)
 
 ## 🧱 System Overview
-**ProSync** enables users to:
+**ProjectPulse** enables users to:
 
 - Create, edit, and share project profiles
 - Attach and manage project documents
@@ -35,7 +35,7 @@ potgresql-advanced-onboarding-kit/
 ```
 
 
-## 🧩 Quest Log – ProSync
+## 🧩 Quest Log – ProjectPulse
 
 
 | 🧩 Quest                                                   | 🧠 Skill Domain                  |
