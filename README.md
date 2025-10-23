@@ -1,4 +1,4 @@
-# 🧠 Practice Scenario: ProSync – Scalable Project Collaboration Platform
+# 🧠 Practice Scenario: ProjectPulse – Scalable Project Collaboration Platform
 
 ## 🧭 Purpose
 In this lab, you'll put PostgreSQL best practices into action to build high-quality, maintainable databases step-by-step.
@@ -34,7 +34,6 @@ potgresql-advanced-onboarding-kit/
 │   ├── sql # Scripts extractiong from de docs/quests.
 ```
 
-## 🧩 Quest Log – ProSync
 
 ## 🧩 Quest Log – ProSync
 
