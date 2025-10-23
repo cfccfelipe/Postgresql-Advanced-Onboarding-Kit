@@ -38,9 +38,10 @@ potgresql-advanced-onboarding-kit/
 
 ## 🧩 Quest Log – ProSync
 
-| Quest                                                       | Skill Domain                    |
-|-------------------------------------------------------------|----------------------------------|
-| Create a Role-Based Access Control (RBAC)                   | SQL Privileges and Roles         |
-| Design a Normalized Data Model                              | SQL Schema Design                |
 
+| 🧩 Quest                                                   | 🧠 Skill Domain                  |
+|------------------------------------------------------------|----------------------------------|
+| Create a Role-Based Access Control (RBAC)                  | SQL Privileges and Roles         |
+| Design Normalized Tables and Relationships                 | Data Modeling                    |
+| Improve Performance & Integrity                            | Performance Tuning & Integrity   |
 

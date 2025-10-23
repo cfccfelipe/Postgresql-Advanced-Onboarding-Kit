@@ -1,10 +1,6 @@
 roles:
-  analyst_role:
-    schemas: [projects]
-    privileges: [USAGE, SELECT]
-
   developer_role:
-    schemas: [projects, documents, sessions]
+    schemas: [projects, documents, reference]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
   auditor_role:
@@ -12,15 +8,12 @@ roles:
     privileges: [USAGE, SELECT]
 
   admin_role:
-    schemas: [projects, documents, sessions, users, audit, staging]
+    schemas: [projects, documents, reference, users, audit]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
 users:
-  donald:
-    inherits: analyst_role
-
-  elon:
-    inherits: analyst_role
+  carlos:
+    inherits: auditor_role
 
   felipe:
     inherits: developer_role

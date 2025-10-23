@@ -40,15 +40,6 @@
 
 ---
 
-### 🛡️ Quest: Access Control and Privilege Management
-
-| Task                                                       | Skill Domain             |
-|------------------------------------------------------------|--------------------------|
-| Grant `editor_role` access to update projects but not delete| RBAC, Privileges         |
-| Validate access with privilege audit queries               | Security Verification    |
-
----
-
 ### 🧪 Quest: Monitor and Validate System Behavior
 
 | Task                                                       | Skill Domain             |

@@ -1,4 +1,5 @@
--- STEP 1: USERS AND SESSIONS
+-- STEP 1: USERS TABLES
+CREATE SCHEMA IF NOT EXISTS users;
 
 CREATE TABLE users.users (
   user_id SERIAL PRIMARY KEY,
@@ -6,7 +7,7 @@ CREATE TABLE users.users (
   password_hash TEXT NOT NULL
 );
 
-CREATE TABLE auth.sessions (
+CREATE TABLE users.sessions (
   session_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id INT NOT NULL REFERENCES users.users(user_id),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -18,69 +19,125 @@ CREATE TABLE auth.sessions (
   metadata JSONB
 );
 
--- STEP 2: PROJECTS AND ACCESS
 
-CREATE TABLE projects.projects (
-  project_id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  settings JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP,
-  updated_by INT REFERENCES users.users(user_id),
-  deleted_at TIMESTAMP
+-- STEP 2: REFERENCES TABLES
+CREATE SCHEMA IF NOT EXISTS reference;
+
+CREATE TABLE reference.feature_reference (
+  feature_id SERIAL PRIMARY KEY,
+  feature TEXT UNIQUE NOT NULL
 );
 
-CREATE TABLE projects.project_history (
-  history_id SERIAL PRIMARY KEY,
-  project_id INT NOT NULL REFERENCES projects.projects(project_id),
-  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  changed_by INT NOT NULL REFERENCES users.users(user_id),
-  name TEXT,
+CREATE TABLE reference.tech_stack_reference (
+  tech_id SERIAL PRIMARY KEY,
+  technology TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE reference.access_role_reference (
+  role_id SERIAL PRIMARY KEY,
+  role TEXT UNIQUE NOT NULL,
+  capabilities TEXT NOT NULL
+);
+
+CREATE TABLE reference.license_reference (
+  license_id SERIAL PRIMARY KEY,
+  license_name TEXT UNIQUE NOT NULL,
   description TEXT
 );
 
-CREATE TABLE projects.access_role_reference (
-  role_id SERIAL PRIMARY KEY,
-  role TEXT UNIQUE NOT NULL
+CREATE TABLE reference.phase_reference (
+  phase_id SERIAL PRIMARY KEY,
+  phase_name TEXT UNIQUE NOT NULL,
+  description TEXT
 );
 
-CREATE TABLE projects.project_access (
-  access_id SERIAL PRIMARY KEY,
-  user_id INT NOT NULL REFERENCES users.users(user_id),
-  project_id INT NOT NULL REFERENCES projects.projects(project_id),
-  role_id INT NOT NULL REFERENCES projects.access_role_reference(role_id)
+CREATE TABLE reference.decision_type_reference (
+  type_id SERIAL PRIMARY KEY,
+  type_name TEXT UNIQUE NOT NULL
 );
 
--- STEP 3: TAGS
-
-CREATE TABLE projects.tag_reference (
+CREATE TABLE reference.tag_reference (
   tag_id SERIAL PRIMARY KEY,
   tag TEXT UNIQUE NOT NULL,
   category TEXT
 );
 
-CREATE TABLE projects.project_tag (
-  project_tag_id SERIAL PRIMARY KEY,
-  project_id INT NOT NULL REFERENCES projects.projects(project_id),
-  tag_id INT NOT NULL REFERENCES projects.tag_reference(tag_id)
-);
-
--- STEP 4: DOCUMENTS AND STORAGE
-
-CREATE TABLE documents.filetype_reference (
+CREATE TABLE reference.filetype_reference (
   filetype_id SERIAL PRIMARY KEY,
   extension TEXT UNIQUE NOT NULL,
   mime_type TEXT NOT NULL,
   description TEXT
 );
 
-CREATE TABLE documents.storage_reference (
+CREATE TABLE reference.storage_reference (
   storage_id SERIAL PRIMARY KEY,
   provider TEXT NOT NULL,
   location TEXT NOT NULL,
   retention_policy TEXT
 );
+
+CREATE TABLE reference.priority_reference (
+  priority_id SERIAL PRIMARY KEY,
+  priority_name TEXT UNIQUE NOT NULL
+);
+
+
+-- STEP 3: PROJECT TABLES
+
+CREATE SCHEMA IF NOT EXISTS projects;
+
+CREATE TABLE projects.projects (
+  project_id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT,
+  endpoints JSONB,
+  settings JSONB,
+  owner_id INT REFERENCES users.users(user_id),
+  image_url TEXT,
+  phase_id INT REFERENCES reference.phase_reference(phase_id),
+  version NUMERIC DEFAULT 0.1,
+  license_id INT REFERENCES reference.license_reference(license_id),
+  priority_id INT REFERENCES reference.priority_reference(priority_id),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP,
+  updated_by INT REFERENCES users.users(user_id),
+  deleted_at TIMESTAMP
+);
+
+CREATE TABLE projects.project_feature (
+  project_feature_id SERIAL PRIMARY KEY,
+  project_id INT NOT NULL REFERENCES projects.projects(project_id) ON DELETE CASCADE,
+  feature_id INT NOT NULL REFERENCES reference.feature_reference(feature_id)
+);
+
+CREATE TABLE projects.project_tech_stack (
+  project_tech_id SERIAL PRIMARY KEY,
+  project_id INT NOT NULL REFERENCES projects.projects(project_id) ON DELETE CASCADE,
+  tech_id INT NOT NULL REFERENCES reference.tech_stack_reference(tech_id)
+);
+
+CREATE TABLE projects.project_decision_log (
+  decision_id SERIAL PRIMARY KEY,
+  project_id INT NOT NULL REFERENCES projects.projects(project_id) ON DELETE CASCADE,
+  decided_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  decided_by INT NOT NULL REFERENCES users.users(user_id),
+  type_id INT REFERENCES reference.decision_type_reference(type_id),
+  summary TEXT NOT NULL,
+  rationale TEXT,
+  impact TEXT,
+  related_feature_id INT REFERENCES reference.feature_reference(feature_id),
+  related_document_id INT REFERENCES documents.documents(document_id)
+);
+
+CREATE TABLE projects.project_tag (
+  project_tag_id SERIAL PRIMARY KEY,
+  project_id INT NOT NULL REFERENCES projects.projects(project_id),
+  tag_id INT NOT NULL REFERENCES reference.tag_reference(tag_id)
+);
+
+-- STEP 4: DOCUMENTS TABLES
+
+CREATE SCHEMA IF NOT EXISTS documents;
 
 CREATE TABLE documents.documents (
   document_id SERIAL PRIMARY KEY,
@@ -88,116 +145,50 @@ CREATE TABLE documents.documents (
   filename TEXT NOT NULL,
   size INT NOT NULL,
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  filetype_id INT NOT NULL REFERENCES documents.filetype_reference(filetype_id),
-  uploaded_by INT NOT NULL REFERENCES users.users(user_id),
-  storage_id INT NOT NULL REFERENCES documents.storage_reference(storage_id),
+  filetype_id INT NOT NULL REFERENCES reference.filetype_reference(filetype_id),
+  uploaded_by TEXT,
+  storage_id INT NOT NULL REFERENCES reference.storage_reference(storage_id),
   image_url TEXT,
+  version NUMERIC DEFAULT 0.1,
+  priority_id INT REFERENCES reference.priority_reference(priority_id),
+  phase_id INT REFERENCES reference.phase_reference(phase_id),
+  description TEXT,
   checksum TEXT UNIQUE,
   custom_properties JSONB,
   deleted_at TIMESTAMP
 );
 
-CREATE TABLE documents.document_history (
+-- STEP 5: AUDIT TABLES
+
+CREATE SCHEMA IF NOT EXISTS audit;
+
+CREATE TABLE audit.project_history (
+  history_id SERIAL PRIMARY KEY,
+  project_id INT NOT NULL REFERENCES projects.projects(project_id),
+  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  changed_by INT NOT NULL REFERENCES users.users(user_id),
+  owner_id INT REFERENCES users.users(user_id),
+  title TEXT,
+  description TEXT,
+  settings JSONB,
+  endpoints JSONB,
+  version NUMERIC,
+  priority_id INT REFERENCES reference.priority_reference(priority_id),
+  image_url TEXT,
+  deleted_at TIMESTAMP,
+  change_summary TEXT
+);
+
+CREATE TABLE audit.document_history (
   history_id SERIAL PRIMARY KEY,
   document_id INT NOT NULL REFERENCES documents.documents(document_id),
   changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   changed_by INT NOT NULL REFERENCES users.users(user_id),
   filename TEXT,
   size INT,
-  filetype_id INT,
-  storage_id INT
+  version NUMERIC,
+  priority_id INT REFERENCES reference.priority_reference(priority_id),
+  phase_id INT REFERENCES reference.phase_reference(phase_id),
+  filetype_id INT REFERENCES reference.filetype_reference(filetype_id),
+  storage_id INT REFERENCES reference.storage_reference(storage_id)
 );
-
--- STEP 5: STAGING
-
-CREATE SCHEMA IF NOT EXISTS staging;
-
-CREATE TABLE staging.documents_ingest (
-  ingest_id SERIAL PRIMARY KEY,
-  project_id INT NOT NULL REFERENCES projects.projects(project_id),
-  uploaded_by INT NOT NULL REFERENCES users.users(user_id),
-  filename TEXT NOT NULL,
-  size INT NOT NULL,
-  checksum TEXT UNIQUE,
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  status TEXT DEFAULT 'pending',
-  rejection_reason TEXT,
-  s3_key TEXT,
-  metadata JSONB,
-  notes TEXT
-);
-
--- STEP 6: AUDIT AND VERSIONING
-
-CREATE TABLE audit.audit_log (
-  audit_id SERIAL PRIMARY KEY,
-  project_id INT NOT NULL REFERENCES projects.projects(project_id),
-  actor_id INT NOT NULL REFERENCES users.users(user_id),
-  action TEXT,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE system.schema_version (
-  version_id SERIAL PRIMARY KEY,
-  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  description TEXT
-);
-
--- STEP 7: INDEXES
-
-CREATE INDEX idx_documents_project_date ON documents.documents(project_id, uploaded_at DESC);
-CREATE INDEX idx_project_access_user_role ON projects.project_access(user_id, role_id);
-CREATE INDEX idx_audit_actor_timestamp ON audit.audit_log(actor_id, timestamp DESC);
-CREATE INDEX idx_project_tag_project ON projects.project_tag(project_id);
-CREATE INDEX idx_documents_ingest_project_status ON staging.documents_ingest(project_id, status);
-CREATE INDEX idx_documents_ingest_uploaded_by ON staging.documents_ingest(uploaded_by);
-CREATE INDEX idx_documents_ingest_checksum ON staging.documents_ingest(checksum);
-
--- STEP 8: DBMS CONFIGURATION
-
-ALTER TABLE documents.documents SET (fillfactor = 80);
-ALTER TABLE audit.audit_log SET (fillfactor = 90);
-
-ALTER TABLE documents.documents SET (parallel_workers = 2);
-ALTER TABLE audit.audit_log SET (parallel_workers = 2);
-
-ALTER TABLE audit.audit_log SET (
-  autovacuum_enabled = true,
-  autovacuum_vacuum_threshold = 100,
-  autovacuum_analyze_threshold = 100
-);
-
-ALTER TABLE documents.documents SET (toast_tuple_target = 2048);
-
-ALTER TABLE documents.filetype_reference ALTER COLUMN description SET STORAGE EXTENDED;
-ALTER TABLE audit.audit_log ALTER COLUMN action SET STORAGE EXTENDED;
-
--- STEP 9: PARTITIONING
-
-CREATE TABLE documents.documents_partitioned (
-  LIKE documents.documents INCLUDING ALL
-) PARTITION BY RANGE (uploaded_at);
-
-CREATE TABLE documents_2025_01 PARTITION OF documents.documents_partitioned
-FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
-
-CREATE TABLE documents_2025_02 PARTITION OF documents.documents_partitioned
-FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
-
-CREATE TABLE audit.audit_log_partitioned (
-  LIKE audit.audit_log INCLUDING ALL
-) PARTITION BY RANGE (timestamp);
-
-CREATE TABLE audit_2025_01 PARTITION OF audit.audit_log_partitioned
-FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
-
-CREATE TABLE audit_2025_02 PARTITION OF audit.audit_log_partitioned
-FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
-
-
--- STEP 10: CONSTRAINTS
-
-ALTER TABLE users.users ADD CONSTRAINT chk_users_login_email CHECK (login LIKE '%@%');
-ALTER TABLE documents.documents ADD CONSTRAINT chk_document_size_positive CHECK (size > 0);
-ALTER TABLE staging.documents_ingest ADD CONSTRAINT chk_ingest_size_positive CHECK (size > 0);
-ALTER TABLE staging.documents_ingest ADD CONSTRAINT chk_ingest_status_valid CHECK (status IN ('pending', 'validated', 'rejected', 'processed'));
