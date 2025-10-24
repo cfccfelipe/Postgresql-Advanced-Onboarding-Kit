@@ -41,9 +41,9 @@ potgresql-advanced-onboarding-kit/
 | Design phyisical model                                     | Data Modeling                    |
 | Create a Role-Based Access Control (RBAC)                  | SQL Privileges and Roles         |
 | Improve Performance & Integrity                            | Performance Tuning & Integrity   |
-| Workflows & DB Validation using Fakes                      | Unit Testing                     |
+| Workflows & DB Validation using Fakes                      | EngX Test                     |
 | Containerization                                           | Isolation            |
 
-## Automation
+## Run
 - make db           # Create DB
 - make fakes        # Test DB with fake data
