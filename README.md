@@ -1,16 +1,7 @@
-# 🧠 Practice Scenario: ProjectPulse – Scalable Project Collaboration Platform
+# 🧠 Practice Scenario: ProjectPulse – Scalable Projects Collaboration Platform
 
 ## 🧭 Purpose
-In this lab, you'll put PostgreSQL best practices into action to build high-quality, maintainable databases step-by-step.
-
-## 🎯 Learning Objectives
-Build and optimize a PostgreSQL schema that supports:
-
-- 👥 Multi-user collaboration on projects
-- 📝 Version history and audit trails
-- 🔐 Role-based access control (RBAC)
-- 🧩 Structured and semi-structured data (JSON)
-- 🚀 Performance at scale (partitioning, indexing, materialized views)
+In this lab, you'll put PostgreSQL best practices into action to build maintainable databases step-by-step.
 
 ## 🧱 System Overview
 **ProjectPulse** enables users to:
@@ -18,20 +9,26 @@ Build and optimize a PostgreSQL schema that supports:
 - Create, edit, and share project profiles
 - Attach and manage project documents
 - Track work sessions and outcomes
-- Audit changes and version history
-- Collaborate securely with differentiated permissions (owner vs participant)
+- Collaborate securely with Role-based access control (RBAC)
+- Includes Structured and semi-structured data (JSON)
+- Performance at scale (partitioning, indexing, materialized views)
+- DB Containerization, Automation with Make, Env with Poetry, and Automation with Make
 
-## 📁 Folde Structure
+## 📁 Folder Structure
 
 ```plaintext
 potgresql-advanced-onboarding-kit/
 ├── README.md
 ├── .gitignore
+├── Makefile
+├── Dockerfile
+├── pyproject.toml #Python enviroment for tests
 ├── docs/ #Step-by-step guides to complete quests
 │
 ├── src/
 │   ├── security # Security-based files
-│   ├── sql # Scripts extractiong from de docs/quests.
+│   ├── sql # SQL Scripts extractiong from de docs/quests.
+│   ├── scripts # Python Script to generate fakes
 ```
 
 
@@ -45,7 +42,8 @@ potgresql-advanced-onboarding-kit/
 | Create a Role-Based Access Control (RBAC)                  | SQL Privileges and Roles         |
 | Improve Performance & Integrity                            | Performance Tuning & Integrity   |
 | Workflows & DB Validation using Fakes                      | Unit Testing                     |
+| Containerization                                           | Isolation            |
 
 ## Automation
-make db           # Create DB
-make fakes        # Installs Poetry if missing, do tests and generate fake data.
+- make db           # Create DB
+- make fakes        # Test DB with fake data
