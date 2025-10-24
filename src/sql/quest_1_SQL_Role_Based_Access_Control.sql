@@ -22,9 +22,12 @@ CREATE ROLE admin_role;
 
 CREATE ROLE carlos LOGIN PASSWORD 'secure123';
 CREATE ROLE felipe LOGIN PASSWORD 'secure123';
+CREATE ROLE nobody LOGIN PASSWORD 'secure123';
+
 
 GRANT auditor_role TO carlos;
 GRANT developer_role TO felipe;
+GRANT admin_role TO nobody;
 
 -- STEP 4: CREATE FOUNDATIONAL SCHEMAS
 
@@ -39,6 +42,7 @@ CREATE SCHEMA IF NOT EXISTS audit;
 -- DEVELOPER ROLE
 GRANT USAGE, CREATE ON SCHEMA projects, documents, reference TO developer_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA projects, documents, reference TO developer_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA projects, documents, reference TO admin_role;
 
 -- AUDITOR ROLE
 GRANT USAGE ON SCHEMA audit TO auditor_role;
@@ -46,7 +50,8 @@ GRANT SELECT ON ALL TABLES IN SCHEMA audit TO auditor_role;
 
 -- ADMIN ROLE
 GRANT ALL PRIVILEGES ON SCHEMA projects, documents, reference, users, audit TO admin_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA users TO admin_role;
+GRANT SELECT, INSERT, UPDATE,TRUNCATE, DELETE ON ALL TABLES IN SCHEMA projects, documents, reference, users, audit TO admin_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA projects, documents, reference, users, audit TO admin_role;
 
 -- STEP 6: OWNERSHIP ASSIGNMENT
 

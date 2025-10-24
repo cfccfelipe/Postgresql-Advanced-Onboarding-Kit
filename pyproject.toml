@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "Postgresql-Advanced-Onboarding-Kit"
+version = "0.1.0"
+description = "Python Scripts for the Lab"
+authors = ["Felipe <cfccfelipe@gmail..com>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+psycopg2-binary = "^2.9.11"
+faker = "^37.11.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2"
+coverage = "^7.11.0"
+pytest-cov = "^7.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

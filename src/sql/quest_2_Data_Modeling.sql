@@ -116,18 +116,6 @@ CREATE TABLE projects.project_tech_stack (
   tech_id INT NOT NULL REFERENCES reference.tech_stack_reference(tech_id)
 );
 
-CREATE TABLE projects.project_decision_log (
-  decision_id SERIAL PRIMARY KEY,
-  project_id INT NOT NULL REFERENCES projects.projects(project_id) ON DELETE CASCADE,
-  decided_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  decided_by INT NOT NULL REFERENCES users.users(user_id),
-  type_id INT REFERENCES reference.decision_type_reference(type_id),
-  summary TEXT NOT NULL,
-  rationale TEXT,
-  impact TEXT,
-  related_feature_id INT REFERENCES reference.feature_reference(feature_id),
-  related_document_id INT REFERENCES documents.documents(document_id)
-);
 
 CREATE TABLE projects.project_tag (
   project_tag_id SERIAL PRIMARY KEY,
@@ -158,6 +146,18 @@ CREATE TABLE documents.documents (
   deleted_at TIMESTAMP
 );
 
+CREATE TABLE projects.project_decision_log (
+  decision_id SERIAL PRIMARY KEY,
+  project_id INT NOT NULL REFERENCES projects.projects(project_id) ON DELETE CASCADE,
+  decided_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  decided_by INT NOT NULL REFERENCES users.users(user_id),
+  type_id INT REFERENCES reference.decision_type_reference(type_id),
+  summary TEXT NOT NULL,
+  rationale TEXT,
+  impact TEXT,
+  related_feature_id INT REFERENCES reference.feature_reference(feature_id),
+  related_document_id INT REFERENCES documents.documents(document_id)
+);
 -- STEP 5: AUDIT TABLES
 
 CREATE SCHEMA IF NOT EXISTS audit;

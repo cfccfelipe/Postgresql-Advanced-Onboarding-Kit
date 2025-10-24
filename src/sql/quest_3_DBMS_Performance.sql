@@ -182,8 +182,7 @@ JOIN reference.feature_reference fr ON pf.feature_id = fr.feature_id;
 CREATE MATERIALIZED VIEW projects.matview_project_tech_stack AS
 SELECT
   pts.project_id,
-  ts.tech_name,
-  ts.category
+  ts.technology
 FROM projects.project_tech_stack pts
 JOIN reference.tech_stack_reference ts ON pts.tech_id = ts.tech_id;
 -- REFRESH MATERIALIZED VIEW projects.matview_project_tech_stack;
@@ -197,10 +196,11 @@ SELECT
   h.title,
   h.description,
   h.version,
-  h.priority,
+  h.priority_id,  -- Corregido aquí
   h.image_url,
   h.deleted_at,
   h.change_summary
 FROM audit.project_history h
 LEFT JOIN users.users u ON h.changed_by = u.user_id;
+
 -- REFRESH MATERIALIZED VIEW audit.matview_project_history_audit;
