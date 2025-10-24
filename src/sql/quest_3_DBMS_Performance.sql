@@ -48,13 +48,11 @@ ALTER TABLE projects.projects SET (parallel_workers = 2);
 -- Optimize TOAST storage for large JSONB fields (e.g., endpoints, settings)
 ALTER TABLE projects.projects SET (toast_tuple_target = 2048);
 
+
 -- STEP 3: CHECKING_CONSTRAINTS
 
 -- Ensure login is a valid email format
 ALTER TABLE users.users ADD CONSTRAINT chk_users_login_email CHECK (login LIKE '%@%');
-
--- Ensure document size is positive
-ALTER TABLE documents.documents ADD CONSTRAINT chk_document_size_positive CHECK (size > 0);
 
 -- Prevent empty passwords
 ALTER TABLE users.users ADD CONSTRAINT chk_password_not_empty CHECK (char_length(password_hash) > 0);
@@ -79,18 +77,6 @@ ALTER TABLE projects.project_decision_log ADD CONSTRAINT chk_decision_summary_no
 
 
 -- STEP 4: PARTITIONING
--- Future implementation for time-based
--- -- Master partitioned table for documents
--- CREATE TABLE documents.documents_partitioned (
---   LIKE documents.documents INCLUDING DEFAULTS INCLUDING CONSTRAINTS
--- ) PARTITION BY RANGE (uploaded_at);
-
--- -- Monthly partitions
--- CREATE TABLE documents.documents_2025_01 PARTITION OF documents.documents_partitioned
--- FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
-
--- CREATE TABLE documents.documents_2025_02 PARTITION OF documents.documents_partitioned
--- FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
 
 CREATE TABLE projects.projects_partitioned (
   LIKE projects.projects INCLUDING DEFAULTS INCLUDING CONSTRAINTS
@@ -146,7 +132,6 @@ SELECT
   d.document_id,
   d.project_id,
   d.filename,
-  d.size,
   d.version,
   d.uploaded_at,
   d.uploaded_by,
@@ -186,21 +171,3 @@ SELECT
 FROM projects.project_tech_stack pts
 JOIN reference.tech_stack_reference ts ON pts.tech_id = ts.tech_id;
 -- REFRESH MATERIALIZED VIEW projects.matview_project_tech_stack;
-
-CREATE MATERIALIZED VIEW audit.matview_project_history_audit AS
-SELECT
-  h.history_id,
-  h.project_id,
-  h.changed_at,
-  u.login AS changed_by,
-  h.title,
-  h.description,
-  h.version,
-  h.priority_id,  -- Corregido aquí
-  h.image_url,
-  h.deleted_at,
-  h.change_summary
-FROM audit.project_history h
-LEFT JOIN users.users u ON h.changed_by = u.user_id;
-
--- REFRESH MATERIALIZED VIEW audit.matview_project_history_audit;

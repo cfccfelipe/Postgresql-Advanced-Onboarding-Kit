@@ -1,6 +1,6 @@
 # ⚙️ Workflow & Validation – `generate_fakes`
 
-This document outlines the integrated validation and data generation strategy behind the `generate_fakes` Makefile target. It combines Poetry environment setup, dependency installation, test coverage, and synthetic data generation into a single reproducible command to support onboarding, audit resilience, and CI/CD integrity.
+This document outlines the integrated validation and data generation strategy behind the `generate_fakes` Makefile target. It combines Poetry environment setup, dependency installation, test coverage, and synthetic data generation into a single reproducible command to support onboarding and CI/CD integrity.
 
 ---
 
@@ -52,7 +52,7 @@ Validate schema logic, generators, and transformations with granular test covera
 ## ✅ Step 4: Synthetic Data Generation
 
 **Purpose**
-Populate the PostgreSQL schema with realistic, audit-ready test data for onboarding and benchmarking.
+Populate the PostgreSQL schema with realistic test data for onboarding and benchmarking.
 
 **Mechanism**
 - Executes `quest_4_Generate_Fake_Data.py` via Poetry
@@ -60,10 +60,43 @@ Populate the PostgreSQL schema with realistic, audit-ready test data for onboard
 
 **Traceability**
 - Script located in `src/scripts/`
-- Output validated via downstream queries and audit views
+- Output validated via downstream queries
 
 ---
 
-### 🧠 Semantic Tags
-`#workflow` `#makefile` `#poetry` `#pytest` `#coverage` `#faker`
-`#data-generation` `#audit-ready` `#onboarding` `#ci-cd` `#postgresql`
+## ✅ Step 5: Check results
+```sql
+SELECT 'users.users' AS table_name, COUNT(*) FROM users.users
+UNION ALL
+SELECT 'users.sessions', COUNT(*) FROM users.sessions
+UNION ALL
+SELECT 'reference.tech_stack_reference', COUNT(*) FROM reference.tech_stack_reference
+UNION ALL
+SELECT 'reference.feature_reference', COUNT(*) FROM reference.feature_reference
+UNION ALL
+SELECT 'reference.access_role_reference', COUNT(*) FROM reference.access_role_reference
+UNION ALL
+SELECT 'reference.license_reference', COUNT(*) FROM reference.license_reference
+UNION ALL
+SELECT 'reference.phase_reference', COUNT(*) FROM reference.phase_reference
+UNION ALL
+SELECT 'reference.decision_type_reference', COUNT(*) FROM reference.decision_type_reference
+UNION ALL
+SELECT 'reference.tag_reference', COUNT(*) FROM reference.tag_reference
+UNION ALL
+SELECT 'reference.filetype_reference', COUNT(*) FROM reference.filetype_reference
+UNION ALL
+SELECT 'reference.storage_reference', COUNT(*) FROM reference.storage_reference
+UNION ALL
+SELECT 'reference.priority_reference', COUNT(*) FROM reference.priority_reference
+UNION ALL
+SELECT 'projects.projects', COUNT(*) FROM projects.projects
+UNION ALL
+SELECT 'projects.project_feature', COUNT(*) FROM projects.project_feature
+UNION ALL
+SELECT 'projects.project_tech_stack', COUNT(*) FROM projects.project_tech_stack
+UNION ALL
+SELECT 'projects.project_tag', COUNT(*) FROM projects.project_tag
+UNION ALL
+SELECT 'projects.project_decision_log', COUNT(*) FROM projects.project_decision_log;
+```

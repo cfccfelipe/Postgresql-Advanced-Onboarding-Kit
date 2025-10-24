@@ -1,13 +1,13 @@
 # 🔐 Role-Based Access Control (RBAC) – ProjectPulse
 
-Design a secure, auditable, and scalable PostgreSQL access model for project collaboration using functional roles, user inheritance, and schema-level permissions.
+Design a secure and scalable PostgreSQL access model for project collaboration using functional roles, user inheritance, and schema-level permissions.
 
 ---
 
 ## 🟢 Step 0: Create the ProjectPulse Database
 
 **Purpose**:
-Establish a clean, UTF-8 encoded database with ICU locale support for multilingual compatibility and audit-readiness.
+Establish a clean, UTF-8 encoded database with ICU locale support for multilingual compatibility.
 
 **Traceability**:
 - Confirm database creation and encoding via `\l`
@@ -34,7 +34,6 @@ Define domain-specific access roles to separate responsibilities and enforce lea
 
 **Roles**:
 - `developer_role`: full access to operational schemas
-- `auditor_role`: read-only access to audit logs
 - `admin_role`: full access to all schemas
 
 **Traceability**:
@@ -49,12 +48,11 @@ Define domain-specific access roles to separate responsibilities and enforce lea
 Create login-enabled roles for individual users and assign them to functional roles.
 
 **Users**:
-- `carlos`: inherits `auditor_role`
 - `felipe`: inherits `developer_role`
 
 **Traceability**:
 - Confirm login roles via `\dg`
-- Audit inheritance via `pg_auth_members`
+- Validate inheritance via `pg_auth_members`
 - Avoid direct grants to users; use role chaining
 
 ---
@@ -62,14 +60,13 @@ Create login-enabled roles for individual users and assign them to functional ro
 ## ✅ Step 4: Create Foundational Schemas for Privilege Segmentation
 
 **Purpose**:
-Segment the database into logical domains for modular access control and auditability.
+Segment the database into logical domains for modular access control.
 
 **Schemas**:
 - `projects`: project metadata and ownership
 - `documents`: uploaded files and metadata
 - `reference`: shared lookup tables
 - `users`: user profiles and identity
-- `audit`: system actions and trace logs
 
 **Traceability**:
 - Confirm schema existence via `pg_namespace`
@@ -84,7 +81,6 @@ Grant schema-level access to functional roles based on their responsibilities.
 
 **Access Matrix**:
 - `developer_role`: full access to `projects`, `documents`, `reference`
-- `auditor_role`: read-only access to `audit`
 - `admin_role`: full access to all schemas
 
 **Traceability**:
@@ -93,7 +89,7 @@ Grant schema-level access to functional roles based on their responsibilities.
 
 ---
 
-## ✅ Step 6: Audit and Validate Privileges
+## ✅ Step 6: Validate Privileges
 
 **Purpose**:
 Confirm that each role has the correct access to each schema.
@@ -118,17 +114,11 @@ roles:
     schemas: [projects, documents, reference]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
-  auditor_role:
-    schemas: [audit]
-    privileges: [USAGE, SELECT]
-
   admin_role:
-    schemas: [projects, documents, reference, users, audit]
+    schemas: [projects, documents, reference, users]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
 users:
-  carlos:
-    inherits: auditor_role
-
   felipe:
     inherits: developer_role
+

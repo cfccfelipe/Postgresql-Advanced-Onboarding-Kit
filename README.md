@@ -41,10 +41,11 @@ potgresql-advanced-onboarding-kit/
 | 🧩 Quest                                                   | 🧠 Skill Domain                  |
 |------------------------------------------------------------|----------------------------------|
 | Design ER diagram                                          | Business Rules and Normalization |
-| Create a Role-Based Access Control (RBAC)                  | SQL Privileges and Roles         |
 | Design phyisical model                                     | Data Modeling                    |
+| Create a Role-Based Access Control (RBAC)                  | SQL Privileges and Roles         |
 | Improve Performance & Integrity                            | Performance Tuning & Integrity   |
 | Workflows & DB Validation using Fakes                      | Unit Testing                     |
 
 ## Automation
-make init        # Installs Poetry if missing
+make db           # Create DB
+make fakes        # Installs Poetry if missing, do tests and generate fake data.

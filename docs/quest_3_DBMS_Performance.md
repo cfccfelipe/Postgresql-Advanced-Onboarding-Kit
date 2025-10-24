@@ -1,6 +1,6 @@
 # ⚙️ Performance & Integrity – ProjectPulse
 
-This document outlines the performance, integrity, and access strategies applied to the ProjectPulse PostgreSQL schema. It includes indexing, DBMS tuning, constraints, partitioning, and materialized views to support scalable collaboration, audit resilience, and onboarding clarity.
+This document outlines the performance, integrity, and access strategies applied to the ProjectPulse PostgreSQL schema. It includes indexing, DBMS tuning, constraints, partitioning, and materialized views to support scalable collaboration and onboarding clarity.
 
 ---
 
@@ -46,7 +46,7 @@ Enforce business rules and data integrity across critical tables.
 
 **Examples**:
 - `users`: valid email format, non-empty passwords, lowercase logins
-- `documents`: positive `size`, non-empty `filename`, positive `version`
+- `documents`: non-empty `filename`, positive `version`
 - `projects`: non-empty `title`, positive `version`
 - `project_decision_log`: non-empty `summary`
 
@@ -87,7 +87,6 @@ Precompute and cache frequently accessed data for dashboards and onboarding.
 - `matview_project_tags`: semantic tags per project
 - `matview_project_feature_matrix`: features per project
 - `matview_project_tech_stack`: tech stack per project
-- `matview_project_history_audit`: audit snapshots of project changes
 
 **Traceability**:
 - Use `pg_matviews` and `pg_views` to inspect definitions
@@ -97,4 +96,4 @@ Precompute and cache frequently accessed data for dashboards and onboarding.
 ---
 
 ### 🧠 Semantic Tags
-`#performance` `#indexing` `#partitioning` `#constraints` `#materialized-views` `#postgresql` `#audit-ready` `#ci-cd` `#data-integrity`
+`#performance` `#indexing` `#partitioning` `#constraints` `#materialized-views` `#postgresql` `#ci-cd` `#data-integrity`

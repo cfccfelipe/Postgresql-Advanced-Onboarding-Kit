@@ -3,17 +3,10 @@ roles:
     schemas: [projects, documents, reference]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
-  auditor_role:
-    schemas: [audit]
-    privileges: [USAGE, SELECT]
-
   admin_role:
-    schemas: [projects, documents, reference, users, audit]
+    schemas: [projects, documents, reference, users]
     privileges: [USAGE, CREATE, SELECT, INSERT, UPDATE, DELETE]
 
 users:
-  carlos:
-    inherits: auditor_role
-
   felipe:
     inherits: developer_role

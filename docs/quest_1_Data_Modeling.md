@@ -80,7 +80,6 @@ Define the foundational goals of the schema.
 
 **Entities**:
 - `documents.documents`: uploaded files and metadata
-- `document_history`: change tracking
 - `filetype_reference`: MIME normalization
 - `storage_reference`: S3 and provider metadata
 
@@ -96,22 +95,3 @@ Define the foundational goals of the schema.
 
 ---
 
-## ✅ Step 5: Audit and History Tracking
-
-**Entities**:
-- `audit.project_history`: snapshots of project metadata
-- `audit.document_history`: snapshots of document metadata
-
-**Design Decisions**:
-- Include `changed_by`, `changed_at`, and `change_summary` for audit resilience
-- Track version, priority, phase, and ownership over time
-- Use history tables to support rollback, compliance, and onboarding clarity
-
-**Traceability**:
-- Use `pg_stat_statements`, `pg_event_trigger`, and `pg_constraint` for deeper audit hooks
-- Document audit policies in `audit-policy.md`
-
----
-
-### 🧠 Semantic Tags
-`#data-modeling` `#postgresql` `#audit-ready` `#fastapi` `#s3` `#ci-cd` `#onboarding` `#schema-design`

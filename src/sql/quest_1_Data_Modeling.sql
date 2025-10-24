@@ -131,7 +131,6 @@ CREATE TABLE documents.documents (
   document_id SERIAL PRIMARY KEY,
   project_id INT NOT NULL REFERENCES projects.projects(project_id),
   filename TEXT NOT NULL,
-  size INT NOT NULL,
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   filetype_id INT NOT NULL REFERENCES reference.filetype_reference(filetype_id),
   uploaded_by TEXT,
@@ -157,38 +156,4 @@ CREATE TABLE projects.project_decision_log (
   impact TEXT,
   related_feature_id INT REFERENCES reference.feature_reference(feature_id),
   related_document_id INT REFERENCES documents.documents(document_id)
-);
--- STEP 5: AUDIT TABLES
-
-CREATE SCHEMA IF NOT EXISTS audit;
-
-CREATE TABLE audit.project_history (
-  history_id SERIAL PRIMARY KEY,
-  project_id INT NOT NULL REFERENCES projects.projects(project_id),
-  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  changed_by INT NOT NULL REFERENCES users.users(user_id),
-  owner_id INT REFERENCES users.users(user_id),
-  title TEXT,
-  description TEXT,
-  settings JSONB,
-  endpoints JSONB,
-  version NUMERIC,
-  priority_id INT REFERENCES reference.priority_reference(priority_id),
-  image_url TEXT,
-  deleted_at TIMESTAMP,
-  change_summary TEXT
-);
-
-CREATE TABLE audit.document_history (
-  history_id SERIAL PRIMARY KEY,
-  document_id INT NOT NULL REFERENCES documents.documents(document_id),
-  changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  changed_by INT NOT NULL REFERENCES users.users(user_id),
-  filename TEXT,
-  size INT,
-  version NUMERIC,
-  priority_id INT REFERENCES reference.priority_reference(priority_id),
-  phase_id INT REFERENCES reference.phase_reference(phase_id),
-  filetype_id INT REFERENCES reference.filetype_reference(filetype_id),
-  storage_id INT REFERENCES reference.storage_reference(storage_id)
 );

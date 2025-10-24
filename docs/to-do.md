@@ -1,51 +1,59 @@
-## 🧩 Specific Quest Breakdown – ProSync
-| Simulate Real-World Operations                              | SQL Testing & Edge Case Design   |
-| Validate Constraint Application During Data Save            | Data Quality & Integrity         |
-| Apply and validate Access by role-table                     | Security & Role Verification     |
-| Top 3 Materialized Views – Validate Performance             | Query Optimization & Aggregation |
----
+## 🧩 Specific Quest Breakdown
+- Dockerizacion
+FROM postgres:15
 
-### 🔄 Quest: Manipulate and Transform Data
+# Install Python, pgcli, and tools
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
-| Task                                                       | Skill Domain             |
-|------------------------------------------------------------|--------------------------|
-| Use `INSERT ON CONFLICT` to upsert project metadata        | JSON, Upserts            |
-| Create `AFTER INSERT` trigger to log document creation     | Triggers, Audit Trails   |
-| Write a stored procedure to clone a project and its tags   | Functions, DML           |
-| Use `EXISTS` to check if a user has access to a project    | Access Checks            |
-| Use `CTEs` to calculate document count per project         | Aggregation, CTEs        |
-| Use `window functions` to rank projects by activity        | Analytics, Window Funcs  |
+# Install Python packages (using --break-system-packages for container isolation)
+RUN pip3 install --no-cache-dir --break-system-packages \
+    pgcli \
+    faker \
+    psycopg2-binary
 
----
+# Copy workshop materials
+COPY sql/ /workshop/sql/
+COPY scripts/ /workshop/scripts/
 
-### 🕒 Quest: Concurrency and Transaction Safety
+# Add helper scripts
+COPY reset-db.sh /usr/local/bin/reset-db
+COPY benchmark.sh /usr/local/bin/benchmark
+RUN chmod +x /usr/local/bin/*
 
-| Task                                                       | Skill Domain             |
-|------------------------------------------------------------|--------------------------|
-| Simulate concurrent edits to the same project              | Concurrency, Locking     |
-| Use `BEGIN`, `SAVEPOINT`, `ROLLBACK` to test ACID behavior | Transaction Control      |
-| Add `project_versions` table with `valid_from` / `valid_to`| Temporal Modeling        |
-| Use `pg_locks` to inspect locking behavior                 | System Inspection        |
-| Apply schema migration: add `priority_level` to projects   | Schema Evolution         |
+# Configure pgcli
+RUN mkdir -p /root/.config/pgcli && \
+    echo "[main]" > /root/.config/pgcli/config && \
+    echo "multi_line = True" >> /root/.config/pgcli/config && \
+    echo "syntax_style = monokai" >> /root/.config/pgcli/config && \
+    echo "auto_expand = True" >> /root/.config/pgcli/config
 
----
+# Set environment variables
+ENV POSTGRES_DB=workshop \
+    POSTGRES_USER=workshop_user \
+    POSTGRES_PASSWORD=workshop_pass \
+    PGDATABASE=workshop \
+    PGUSER=workshop_user
 
-### 🚀 Quest: Optimize Queries and Performance
+WORKDIR /workshop
 
-| Task                                                       | Skill Domain             |
-|------------------------------------------------------------|--------------------------|
-| Use `EXPLAIN ANALYZE` to optimize dashboard queries         | Query Profiling          |
-| Create a materialized view for top 10 active projects       | Aggregation, Optimization|
-| Compare OLTP (editing) vs OLAP (reporting) queries          | Workload Analysis        |
+# PostgreSQL runs on port 5432
+EXPOSE 5432
 
----
+-Supervisor
+[supervisord]
+nodaemon=true
+user=root
 
-### 🧪 Quest: Monitor and Validate System Behavior
+[program:postgresql]
+command=/usr/local/bin/docker-entrypoint.sh postgres
+autorestart=true
+priority=1
 
-| Task                                                       | Skill Domain             |
-|------------------------------------------------------------|--------------------------|
-| Use `pg_stat_statements` to track query performance        | Monitoring & Tuning      |
-| Validate constraint enforcement during data save           | Data Quality             |
-| Ensure sensitive operations are logged and auditable       | Compliance & Traceability|
-| Test edge cases with simulated inserts and deletes         | SQL Testing              |
-
+[program:pgadmin]
+command=/usr/pgadmin4/bin/pgAdmin4
+environment=PGADMIN_DEFAULT_EMAIL=admin@workshop.com,PGADMIN_DEFAULT_PASSWORD=admin
+autorestart=true
+priority=2

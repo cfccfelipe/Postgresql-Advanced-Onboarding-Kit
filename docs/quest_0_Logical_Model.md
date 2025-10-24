@@ -1,6 +1,6 @@
 # 🧩 Logical Modeling & Normalization – ProjectPulse ER Model
 
-This document outlines the logical modeling and normalization process used to design the ProjectPulse PostgreSQL schema. It begins with business rule extraction and conceptual modeling, then applies normalization and table generation to support audit resilience, onboarding clarity, and semantic traceability.
+This document outlines the logical modeling and normalization process used to design the ProjectPulse PostgreSQL schema. It begins with business rule extraction and conceptual modeling, then applies normalization and table generation to support onboarding clarity and semantic traceability.
 
 ---
 
@@ -10,21 +10,20 @@ This document outlines the logical modeling and normalization process used to de
 Capture the domain logic, entities, and relationships that define the ProjectPulse platform before physical implementation.
 
 **Approach**
-- Identified core business processes: project tracking, document management, decision logging, and audit history
+- Identified core business processes: project tracking, document management, decision logging
 - Defined entity responsibilities and relationships based on real-world workflows
 - Focused on semantic clarity, modularity, and traceability across all interactions
 
 **Business Rules Captured**
-- A user can own, update, and audit multiple projects
+- A user can own and update multiple projects
 - Projects can have multiple documents, tags, features, and tech stacks
-- Every document and project change must be traceable via history tables
 - Decisions must be logged with type, author, and timestamp
 - Semantic metadata (tags, features, tech) must be reusable and normalized
 - All entities must support soft deletes and versioning
 
 **Traceability**
 - Captured in early ER sketches and domain walkthroughs
-- Validated with onboarding scenarios and audit simulations
+- Validated with onboarding scenarios
 - Served as the foundation for normalization and schema generation
 
 ---
@@ -32,25 +31,24 @@ Capture the domain logic, entities, and relationships that define the ProjectPul
 ## ✅ Step 1: Core Entity Identification
 
 **Purpose**
-Define the foundational entities and relationships that drive collaboration, document tracking, and auditability.
+Define the foundational entities and relationships that drive collaboration and document tracking.
 
 **Core Entities**
 - `USERS`: contributors, editors, and owners
 - `PROJECTS`: central unit of work
 - `DOCUMENTS`: attached files and metadata
 - `PROJECT_DECISION_LOG`: decisions and rationale
-- `PROJECT_HISTORY`, `DOCUMENT_HISTORY`: audit trails
 - `SESSIONS`: user activity tracking
 
 **Relationship Mapping**
-- Users update projects, edit histories, and make decisions
+- Users update projects and make decisions
 - Projects include documents, tags, features, tech stacks, and decisions
-- Documents evolve through history and are typed and stored
+- Documents are typed and stored
 - Semantic metadata is linked via reference tables
 
 **Traceability**
 - Modeled using Mermaid ER diagram (see final section)
-- Validated against onboarding, audit, and semantic tagging needs
+- Validated against onboarding and semantic tagging needs
 
 ---
 
@@ -71,7 +69,7 @@ Ensure data integrity, eliminate redundancy, and support scalable querying.
 
 **Traceability**
 - Normalization steps documented in `docs/schema-normalization.md`
-- Reviewed via onboarding walkthroughs and audit simulations
+- Reviewed via onboarding walkthroughs
 
 ---
 
@@ -83,7 +81,7 @@ Translate the normalized model into PostgreSQL tables with constraints, indexes,
 **Mechanism**
 - Tables created via SQL scripts in `src/sql/schema/`
 - Primary and foreign keys enforced
-- Audit fields (`created_at`, `updated_at`, `version`, `deleted_at`) included across all core tables
+- Fields (`created_at`, `updated_at`, `version`, `deleted_at`) included across all core tables
 - JSONB fields used for flexible metadata (`settings`, `endpoints`, `custom_properties`)
 
 **Examples**
@@ -101,12 +99,12 @@ Translate the normalized model into PostgreSQL tables with constraints, indexes,
 ## ✅ Step 4: Semantic Tagging & Reference Integrity
 
 **Purpose**
-Enable flexible querying, onboarding clarity, and audit resilience.
+Enable flexible querying and onboarding clarity.
 
 **Mechanism**
 - Bridge tables link projects to semantic metadata
 - Reference tables (`LICENSE_REFERENCE`, `PRIORITY_REFERENCE`, etc.) enforce controlled vocabularies
-- Materialized views planned for onboarding dashboards and audit snapshots
+- Materialized views planned for onboarding dashboards
 
 **Traceability**
 - Tags defined in `docs/taxonomy/`
@@ -118,24 +116,19 @@ Enable flexible querying, onboarding clarity, and audit resilience.
 ## ✅ Step 5: Entity Relationship Diagram
 
 **Purpose**
-Visualize the normalized schema and its relationships for onboarding, auditing, and semantic navigation.
+Visualize the normalized schema and its relationships for onboarding and semantic navigation.
 
 ```mermaid
 erDiagram
     %% CORE ENTITIES
     USERS ||--o{ PROJECTS : updates
     USERS ||--o{ PROJECT_DECISION_LOG : decides
-    USERS ||--o{ PROJECT_HISTORY : edits
-    USERS ||--o{ DOCUMENT_HISTORY : edits
 
     PROJECTS ||--o{ DOCUMENTS : includes
     PROJECTS ||--o{ PROJECT_FEATURE : has_feature
     PROJECTS ||--o{ PROJECT_TECH_STACK : uses_tech
     PROJECTS ||--o{ PROJECT_TAG : tagged_with
     PROJECTS ||--o{ PROJECT_DECISION_LOG : has_decisions
-    PROJECTS ||--o{ PROJECT_HISTORY : has_changes
-
-    DOCUMENTS ||--o{ DOCUMENT_HISTORY : has_changes
 
     %% RELATIONSHIPS
     PROJECT_FEATURE ||--|| FEATURE_REFERENCE : uses_feature
@@ -153,14 +146,8 @@ erDiagram
     DOCUMENTS ||--|| PRIORITY_REFERENCE : has_priority
     DOCUMENTS ||--|| PHASE_REFERENCE : has_phase
 
-    DOCUMENT_HISTORY ||--|| FILETYPE_REFERENCE : was_type
-    DOCUMENT_HISTORY ||--|| STORAGE_REFERENCE : was_stored_in
-    DOCUMENT_HISTORY ||--|| PHASE_REFERENCE : was_phase
-
     %% SUPPORTING ENTITIES
     USERS ||--o{ SESSIONS : initiates
-    PROJECT_HISTORY ||--|| PROJECTS : belongs_to
-    DOCUMENT_HISTORY ||--|| DOCUMENTS : belongs_to
 
     %% ENTITY DECLARATIONS
     USERS {
@@ -191,7 +178,6 @@ erDiagram
         int document_id PK
         int project_id FK
         string filename
-        int size
         timestamp uploaded_at
         text uploaded_by FK
         int filetype_id FK
@@ -210,6 +196,3 @@ erDiagram
 
     SESSIONS {}
 
-    PROJECT_HISTORY {}
-
-    DOCUMENT_HISTORY {}

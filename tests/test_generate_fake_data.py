@@ -7,9 +7,7 @@ from src.scripts.quest_4_Generate_Fake_Data import (
     generate_project_links,
     truncate_all_tables,
     generate_documents,
-    generate_decision_logs,
-    generate_project_history,
-    generate_document_history
+    generate_decision_logs
 )
 
 def test_generate_users_runs(conn):
@@ -62,15 +60,3 @@ def test_generate_decision_logs(conn):
     with conn.cursor() as cur:
         cur.execute("SELECT COUNT(*) FROM projects.project_decision_log")
         assert cur.fetchone()[0] >= 5
-
-def test_generate_project_history(conn):
-    generate_project_history(conn, count=5)
-    with conn.cursor() as cur:
-        cur.execute("SELECT COUNT(*) FROM audit.project_history")
-        assert cur.fetchone()[0] >= 5
-
-def test_generate_document_history(conn):
-    generate_document_history(conn)
-    with conn.cursor() as cur:
-        cur.execute("SELECT COUNT(*) FROM audit.document_history")
-        assert cur.fetchone()[0] > 0

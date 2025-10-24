@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fake data generator for projectpulse database — normalized, audit-ready
+Fake data generator for projectpulse database — normalized
 """
 import json
 from faker import Faker
@@ -24,8 +24,6 @@ def truncate_all_tables(conn):
     cur = conn.cursor()
     cur.execute("""
         TRUNCATE TABLE
-            audit.document_history,
-            audit.project_history,
             documents.documents,
             projects.projects,
             users.sessions,
@@ -257,7 +255,6 @@ def generate_documents(conn, count=50):
         data.append((
             random.choice(projects),                      # project_id
             fake.file_name(),                             # filename
-            random.randint(1000, 1000000),                # size
             datetime.now(),                               # uploaded_at
             random.choice(filetypes),                     # filetype_id
             fake.name(),                                  # uploaded_by
@@ -275,7 +272,7 @@ def generate_documents(conn, count=50):
     psycopg2.extras.execute_values(
         cur,
         """INSERT INTO documents.documents (
-            project_id, filename, size, uploaded_at, filetype_id, uploaded_by,
+            project_id, filename, uploaded_at, filetype_id, uploaded_by,
             storage_id, image_url, version, priority_id, phase_id,
             description, checksum, custom_properties, deleted_at
         ) VALUES %s""",
@@ -284,95 +281,6 @@ def generate_documents(conn, count=50):
     conn.commit()
     cur.close()
 
-# AUDIT
-
-def generate_project_history(conn, count=50):
-    cur = conn.cursor()
-
-    # Obtener claves foráneas válidas
-    cur.execute("SELECT project_id FROM projects.projects")
-    projects = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT user_id FROM users.users")
-    users = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT priority_id FROM reference.priority_reference")
-    priorities = [r[0] for r in cur.fetchall()]
-
-    data = []
-    for _ in range(count):
-        project_id = random.choice(projects)
-        changed_by = random.choice(users)
-        owner_id = random.choice(users)
-        changed_at = fake.date_time_between(start_date='-30d')
-
-        change_summary = {
-            "field": random.choice(["title", "description", "priority_id", "version"]),
-            "old": fake.word(),
-            "new": fake.word()
-        }
-
-        data.append((
-            project_id,                          # project_id
-            changed_at,                          # changed_at
-            changed_by,                          # changed_by
-            owner_id,                            # owner_id
-            fake.catch_phrase(),                 # title
-            fake.text(100),                      # description
-            json.dumps({"setting": fake.word()}),# settings (JSONB)
-            json.dumps({"api": fake.url()}),     # endpoints (JSONB)
-            round(random.uniform(0.1, 1.5), 2),  # version
-            random.choice(priorities),           # priority_id (válido)
-            fake.image_url(),                    # image_url
-            None,                                # deleted_at
-            json.dumps(change_summary)           # change_summary (JSONB)
-        ))
-
-    psycopg2.extras.execute_values(
-        cur,
-        """INSERT INTO audit.project_history (
-            project_id, changed_at, changed_by, owner_id, title, description,
-            settings, endpoints, version, priority_id, image_url,
-            deleted_at, change_summary
-        ) VALUES %s""",
-        data
-    )
-    conn.commit()
-    cur.close()
-
-def generate_document_history(conn):
-    cur = conn.cursor()
-    cur.execute("SELECT document_id FROM documents.documents")
-    documents = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT user_id FROM users.users")
-    users = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT priority_id FROM reference.priority_reference")
-    priorities = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT phase_id FROM reference.phase_reference")
-    phases = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT filetype_id FROM reference.filetype_reference")
-    filetypes = [r[0] for r in cur.fetchall()]
-    cur.execute("SELECT storage_id FROM reference.storage_reference")
-    storages = [r[0] for r in cur.fetchall()]
-
-    data = []
-    for doc_id in documents:
-        data.append((
-            doc_id, datetime.now(), random.choice(users),
-            fake.file_name(), random.randint(1000, 1000000), 0.2,
-            random.choice(priorities), random.choice(phases),
-            random.choice(filetypes), random.choice(storages)
-        ))
-
-    psycopg2.extras.execute_values(
-        cur,
-        """INSERT INTO audit.document_history (
-            document_id, changed_at, changed_by,
-            filename, size, version,
-            priority_id, phase_id, filetype_id, storage_id
-        ) VALUES %s""",
-        data
-    )
-    conn.commit()
-    cur.close()
 
 def main():
     print("=" * 60)
@@ -389,8 +297,6 @@ def main():
         generate_project_links(conn)
         generate_documents(conn)
         generate_decision_logs(conn)
-        generate_project_history(conn)
-        generate_document_history(conn)
         print("✅ Data generation complete")
     except Exception as e:
         print(f"❌ Error: {e}")
